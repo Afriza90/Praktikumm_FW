@@ -19,7 +19,7 @@ Route::get('/product/{id}/edit', [ProductController::class, 'edit'])->name("prod
 Route::put('/product/{id}', [ProductController::class, 'update'])->name("product-update");
 Route::delete('/product/{id}', [ProductController::class, 'destroy'])->name("product-deleted");
 Route::get('/product/export/excel', [ProductController::class, 'exportExcel'])->name("product-export-excel");
-
+Route::get('/products/export-pdf', [ProductController::class, 'exportPDF'])->name('products.export-pdf');
 
 Route::get('/', function () {
     return view('welcome');
