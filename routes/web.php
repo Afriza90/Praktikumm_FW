@@ -6,16 +6,6 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Suppliercontroller;
 
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
 
 Route::get('/supplier', [suppliercontroller::class, 'index'])->name("supplier-index");
 Route::get('/supplier/create', [suppliercontroller::class, 'create'])->name("supplier-create");
