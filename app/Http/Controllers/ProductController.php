@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\ProductsExport;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\supplier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -18,7 +19,7 @@ class ProductController extends Controller
     public function index(Request $request)
 {
     // Membuat query builder baru untuk model Product
-    $query = Product::query();
+    $query = Product::with('supplier');
 
     // Cek apakah ada parameter 'search' di request
     if ($request->has('search') && $request->search != '') {
@@ -28,8 +29,8 @@ class ProductController extends Controller
     }
 
     // Gunakan query builder untuk paginasi
-    $products = $query->paginate(2);
-
+    $products = $query->paginate(10);
+    //return $products;
     return view("master-data.product-master.index-product", compact('products'));
 }
 
@@ -41,7 +42,9 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view("master-data.product-master.create-product");
+        $suppliers = Supplier::all();
+        return view("master-data.product-master.create-product", compact
+        ('suppliers'));
     }
 
     /**
@@ -60,6 +63,7 @@ class ProductController extends Controller
             'information' => 'nullable|string',
             'qty' => 'required|integer',
             'producer' => 'required|string|max:255',
+            'supplier_Id'=>'required|exists:suppliers,id',
         ]);
 
         // progres simpan data kedalam database
@@ -91,7 +95,8 @@ class ProductController extends Controller
     public function edit(string $id)
     {
         $product = Product::findOrFail($id);
-        return view("master-data.product-master.edit-product", compact('product'));
+        $suppliers = Supplier::all();
+        return view('master-data.product-master.edit-product', compact('product', 'suppliers'));
     }
 
     /**
@@ -101,28 +106,30 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'unit' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'information' => 'nullable|string',
-            'qty' => 'required|integer|min:1',
-            'producer' => 'required|string|max:255',
-        ]);
+    public function update(Request $request, string $id)
+{
+    $request->validate([
+        'product_name' => 'required|string|max:255',
+        'unit' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'information' => 'nullable|string',
+        'qty' => 'required|integer|min:1',
+        'producer' => 'required|string|max:255',
+        'supplier_id' => 'required|exists:suppliers,id', // Validasi supplier_id
+    ]);
 
-        $product = Product::findOrFail($id);
-        $product->update([
-            'product_name' => $request->product_name,
-            'unit' => $request->unit,
-            'type' => $request->type,
-            'information' => $request->information,
-            'qty' => $request->qty,
-            'produser' => $request->produser,
-        ]);
+    $product = Product::findOrFail($id);
 
-        return redirect()->back()->with('success', 'product update successfully!');
+    $product->update([
+        'product_name' => $request->product_name,
+        'unit' => $request->unit,
+        'type' => $request->type,
+        'information' => $request->information,
+        'qty' => $request->qty,
+        'producer' => $request->producer,
+        'supplier_id' => $request->supplier_id,
+    ]);
+        return redirect()->back()->with('success', 'Product update successfully!');
     }
 
     /**
@@ -147,7 +154,7 @@ class ProductController extends Controller
 
     public function exportPDF()
     {
-    $products = Product::all();
+    $ss = Product::all();
     $pdf = Pdf::loadView('Exports.product-pdf', compact('products'));
     $pdf->setPaper('A4', 'portrait');
     return $pdf->download('product.pdf');
